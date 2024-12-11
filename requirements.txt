@@ -1,0 +1,6 @@
+rich
+requests
+argparse
+user_agent
+bs4
+python-whois
