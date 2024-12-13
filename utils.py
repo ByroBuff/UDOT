@@ -1,7 +1,7 @@
 import json
 import rich
 import importlib
-
+import re
 
 def load_config() -> dict:
     with open('config.json', 'r') as f:
@@ -78,3 +78,16 @@ def call(module_name: str, account: dict):
         return func(account)
     else:
         log(f"Module for {module_name} not found.", "warn")
+
+def extract(text):
+    regexes = {
+        "links": r'(https?://[^\s]+)',
+        "emails": r'[\w\.-]+@[\w\.-]+'
+    }
+
+    data = {}
+
+    for key in regexes:
+        data[key] = re.findall(regexes[key], text)
+
+    return data

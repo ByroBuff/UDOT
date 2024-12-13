@@ -17,7 +17,10 @@ def main(account):
     avatar_url = name_req.json()["avatar_url"]
     bio = name_req.json()["bio"]
 
-    links = re.findall(r'(https?://[^\s]+)', bio)
+    try:
+        links = re.findall(r'(https?://[^\s]+)', bio)
+    except:
+        links = []
 
     location = name_req.json()["location"]
     blog = name_req.json()["blog"]

@@ -1,2 +1,2 @@
 # UDOT
-Ultimate Discord OSINT Tool
+Ultimate Discord Osint Tool (UDOT)

@@ -37,10 +37,12 @@ def main(account):
     username = data.get("aboutChannelViewModel", {}).get("canonicalChannelUrl").split("@")[1]
     description = data.get("aboutChannelViewModel", {}).get("description")
 
+    
+
     if description:
-        desc_links = re.findall(r'(https?://[^\s]+)', description)
+        more_data = utils.extract(description)
     else:
-        desc_links = []
+        more_data = {}
 
     country = data.get("aboutChannelViewModel", {}).get("country")
     links = data.get("aboutChannelViewModel", {}).get("links", [])
@@ -50,10 +52,7 @@ def main(account):
 
     links.append(page)
 
-    for link in desc_links:
-        links.append(link)
-
-    return {
+    data = {
         "sites_checked": [page],
         "usernames": [username],
         "images": [avatar],
@@ -61,3 +60,8 @@ def main(account):
         "locations": [country],
         "links": links
     }
+
+    for key in more_data:
+        data[key] = more_data[key]
+
+    return data

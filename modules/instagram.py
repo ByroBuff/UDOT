@@ -2,12 +2,6 @@ import requests
 import json
 import utils
 from urllib.parse import quote_plus
-import phonenumbers
-from phonenumbers.phonenumberutil import (
-    region_code_for_country_code,
-    region_code_for_number,
-)
-import pycountry
 
 def get_user_id(username, session_id):
     headers = {"User-Agent": "iphone_ua", "x-ig-app-id": "936619743392459"}
@@ -16,7 +10,7 @@ def get_user_id(username, session_id):
         headers=headers,
         cookies={'sessionid': session_id}
     )
-    
+
     try:
         if response.status_code == 404:
             return {"id": None, "error": "User not found"}
@@ -111,16 +105,18 @@ def main(account):
             obfuscated_phone = additional_info["user"].get("obfuscated_phone")
 
         pfp = user_info['hd_profile_pic_url_info']['url']
+
+        return {
+            "sites_checked": [f"https://instagram.com/{account['name']}"],
+            "usernames": [account["name"]],
+            "names": [name],
+            "images": [pfp],
+            "bios": [bio],
+            "emails": [public_email, obfuscated_email],
+            "phone_numbers": [public_phone_number, obfuscated_phone],
+            "links": [url, f"https://instagram.com/{account['name']}"]
+        }
     else:
         utils.log("Instagram session not found in config.json. Not all information will be available.", "warn")
 
-    return {
-        "sites_checked": [f"https://instagram.com/{account['name']}"],
-        "usernames": [account["name"]],
-        "names": [name],
-        "images": [pfp],
-        "bios": [bio],
-        "emails": [public_email, obfuscated_email],
-        "phone_numbers": [public_phone_number, obfuscated_phone],
-        "links": [url, f"https://instagram.com/{account['name']}"]
-    }
+    

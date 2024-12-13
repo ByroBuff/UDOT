@@ -9,24 +9,40 @@ def main(account):
     aliases = [alias["newname"] for alias in data.json()]
 
     profile = requests.get(f"https://steamcommunity.com/profiles/{account['id']}")
-
-    # profile_data = re.search(r'g_rgProfileData = (.*);', profile.text).group(1)
-    # print(profile_data)
     
     soup = bs4.BeautifulSoup(profile.text, "html.parser")
-    avatar = soup.find("link", {"rel": "image_src"})["href"]
-    bio = soup.find("meta", {"name": "Description"})["content"]
-    username = soup.find("span", {"class": "actual_persona_name"}).text
 
-    links = re.findall(r'(https?://[^\s]+)', bio)
-    links.append(f"https://steamcommunity.com/profiles/{account['id']}")
+    try:
+        div = soup.find("div", {"class": "header_real_name"})
+        location = div.text.strip()
+    except:
+        location = None
+
+    try:
+        avatar = soup.find("link", {"rel": "image_src"})["href"]
+    except:
+        avatar = None
+
+    try:
+        bio = soup.find("meta", {"name": "Description"})["content"]
+        more_data = utils.extract(bio)
+        more_data["links"].append(f"https://steamcommunity.com/profiles/{account['id']}")
+    except:
+        bio = None
+        
+    username = soup.find("span", {"class": "actual_persona_name"}).text
 
     aliases.append(username)
 
-    return {
+    data = {
         "sites_checked": [f"https://steamcommunity.com/profiles/{account['id']}"],
         "usernames": aliases,
         "images": [avatar],
+        "locations": [location],
         "bios": [bio],
-        "links": links
     }
+
+    for key in more_data:
+        data[key] = more_data[key]
+
+    return data

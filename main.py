@@ -57,8 +57,6 @@ def get_discord_user(id: int):
         else:
             final_output[key] += discord_data[key]
 
-
-    print(checked)
     rich.print_json(data=utils.clean(final_output))
     
     # compare links in checked vs final_output["links"]
