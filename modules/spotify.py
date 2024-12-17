@@ -9,9 +9,7 @@ def main(account):
 
     soup = bs4.BeautifulSoup(auth_req.text, "html.parser")
     session = json.loads(soup.find("script", {"id": "session"}).text)["accessToken"]
-
-    print(session)
-
+    
     headers = {
         "Authorization": "Bearer " + session
     }
@@ -19,7 +17,10 @@ def main(account):
     response = requests.get(f"https://spclient.wg.spotify.com/user-profile-view/v3/profile/{account['id']}", headers=headers)
 
     name = response.json()["name"]
-    image = response.json()["image_url"]
+    try:
+        image = response.json()["image_url"]
+    except KeyError:
+        image = None
 
     return {
         "sites_checked": [f"https://open.spotify.com/user/{account['id']}"],

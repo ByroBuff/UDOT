@@ -80,14 +80,68 @@ def call(module_name: str, account: dict):
         log(f"Module for {module_name} not found.", "warn")
 
 def extract(text):
+
+    if not isinstance(text, str):
+        return {}
+
     regexes = {
         "links": r'(https?://[^\s]+)',
-        "emails": r'[\w\.-]+@[\w\.-]+'
+        "emails": r'[\w\.-]+@[\w\.-]+',
+        "phone_numbers": r'\+\d{1,3}[-.\/ ]?\(?\d{1,4}\)?[-.\/ ]?\d{1,4}[-.\/ ]?\d{1,4}[-.\/ ]?\d{1,4}'
     }
 
     data = {}
 
     for key in regexes:
-        data[key] = re.findall(regexes[key], text)
+        if key in data:
+            data[key].extend(re.findall(regexes[key], text))
+        else:
+            data[key] = re.findall(regexes[key], text)
 
     return data
+
+def merge(data: dict, more_data: dict) -> dict:
+    for key, value in more_data.items():
+        if key in data:
+            data[key].extend(value)
+        else:
+            data[key] = value
+
+    return data
+
+def get_module(link: str):
+    modules = {
+        "telegram": r"http?s://t.me/[\w]+",
+        "gunslol": r"http?s://guns.lol/[\w]+",
+        "linktree": r"http?s://linktr.ee/[\w]+",
+        "youtube": [r"http?s://www.youtube.com/channel/[\w]+", r"http?s://www.youtube.com/c/[\w]+", r"http?s://www.youtube.com/@[\w]+"],
+        "bluesky": r"http://[\w]+.bsky.social",
+    }
+
+    for module in modules:
+        if isinstance(modules[module], list):
+            for regex in modules[module]:
+                if re.match(regex, link):
+                    return module
+                
+        elif isinstance(modules[module], str):
+            if re.match(modules[module], link):
+                return module
+
+    return None
+
+def process_module_output(module_output, final_output, checked):
+    if module_output is None:
+        return
+
+    sites_checked = module_output["sites_checked"]
+    checked.extend(sites_checked)
+
+    keys = list(module_output.keys())
+    keys.remove("sites_checked")
+
+    for key in keys:
+        if key not in final_output:
+            final_output[key] = module_output[key]
+        else:
+            final_output[key] += module_output[key]

@@ -42,7 +42,6 @@ def main(account):
         "bios": [bio],
     }
 
-    for key in more_data:
-        data[key] = more_data[key]
+    data = utils.merge(data, more_data)
 
     return data

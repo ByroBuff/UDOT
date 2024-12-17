@@ -16,7 +16,7 @@ def get_discord_user(id: int):
     response = requests.get(f'https://discord.com/api/v9/users/{id}/profile', headers=headers)
 
     if response.status_code == 404:
-        utils.log("User not found.", "error")
+        utils.log("User not found. Use an account that has seen this user in a guild or is friends with this user", "error")
         exit()
 
     checked = []
@@ -29,24 +29,8 @@ def get_discord_user(id: int):
 
     accounts = data["connected_accounts"]
     for account in accounts:
-
         module_output = utils.call(account["type"], account)
-    
-        if module_output == None:
-            pass
-        else:
-            sites_checked = module_output["sites_checked"]
-            
-            checked.extend(sites_checked)
-            
-            keys = list(module_output.keys())
-            keys.remove("sites_checked")
-
-            for key in keys:
-                if key not in final_output:
-                    final_output[key] = module_output[key]
-                else:
-                    final_output[key] += module_output[key]
+        utils.process_module_output(module_output, final_output, checked)
 
     discord_keys = list(discord_data.keys())
     discord_keys.remove("sites_checked")
@@ -57,13 +41,26 @@ def get_discord_user(id: int):
         else:
             final_output[key] += discord_data[key]
 
+    diff = True
+
+    while diff != set():
+        diff = set(final_output["links"]) - set(checked)
+        diff = set(filter(None, diff))
+        if diff:
+            for link in diff:
+                utils.log(f"New link found in iteration: {link}")
+
+        if diff != set():
+            for link in diff:
+                if link in checked:
+                    continue
+                out = utils.get_module(link)
+                checked.append(link)
+                if out is not None:
+                    extra_module_output = utils.call(out, {"url": link})
+                    utils.process_module_output(extra_module_output, final_output, checked)
+
     rich.print_json(data=utils.clean(final_output))
-    
-    # compare links in checked vs final_output["links"]
-    if "links" in final_output:
-        for link in final_output["links"]:
-            if link not in checked:
-                print(f"Link not found in checked: {link}")
 
 def main(id: int):
     get_discord_user(id)
@@ -79,7 +76,7 @@ if __name__ == "__main__":
     if config["token"] == "":
         token = input("Enter your token: ")
 
-        if auth.validate_token(token)[0] == True:
+        if auth.validate_token(token)[0]:
             utils.log("Token is valid and has been saved to config.json")
             config["token"] = token
             utils.save_config(config)
@@ -91,7 +88,7 @@ if __name__ == "__main__":
 
     utils.log("Validating token...", "info")
     valid, data = auth.validate_token(config["token"])
-    if valid == False:
+    if not valid:
         utils.log("Invalid token.", "error")
         exit()
     else:

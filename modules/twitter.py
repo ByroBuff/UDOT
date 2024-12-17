@@ -18,13 +18,10 @@ def main(account):
 
     try:
         user = twitter.get_user_data(username2)
-    except requests.HTTPError as e:
-        if e.response.status_code == 404:
-            return {
-                "sites_checked": [f"https://twitter.com/{username2}"]
-            }
-        else:
-            raise e
+    except:
+        return {
+            "sites_checked": [f"https://twitter.com/{username2}"]
+        }
 
     username = user["legacy"]["screen_name"]
     name = user["legacy"]["name"]
@@ -42,7 +39,10 @@ def main(account):
         for url in user["legacy"]["entities"]["url"]["urls"]:
             links.append(url["expanded_url"])
 
-    return {
+    more_data = utils.extract(bio)
+    even_more_data = utils.extract(location)
+
+    data = {
         "sites_checked": [f"https://twitter.com/{username2}"],
         "usernames": [username],
         "names": [name],
@@ -51,3 +51,7 @@ def main(account):
         "locations": [location],
         "links": links
     }
+
+    data = utils.merge(data, more_data)
+    data = utils.merge(data, even_more_data)
+    return data

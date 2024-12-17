@@ -2,6 +2,7 @@ import requests
 import json
 import utils
 from urllib.parse import quote_plus
+import rich
 
 def get_user_id(username, session_id):
     headers = {"User-Agent": "iphone_ua", "x-ig-app-id": "936619743392459"}
@@ -92,6 +93,9 @@ def main(account):
         public_email = user_info.get("public_email")
         public_phone_number = f"+{user_info['public_phone_country_code']} {user_info['public_phone_number']}" if user_info.get("public_phone_number") else None
 
+        obfuscated_email = None
+        obfuscated_phone = None
+
         additional_info = advanced_lookup(user_info['username'])
 
         if additional_info["error"] == "Rate limit":
@@ -106,7 +110,9 @@ def main(account):
 
         pfp = user_info['hd_profile_pic_url_info']['url']
 
-        return {
+        more_data = utils.extract(bio)
+
+        data = {
             "sites_checked": [f"https://instagram.com/{account['name']}"],
             "usernames": [account["name"]],
             "names": [name],
@@ -116,7 +122,12 @@ def main(account):
             "phone_numbers": [public_phone_number, obfuscated_phone],
             "links": [url, f"https://instagram.com/{account['name']}"]
         }
+
+        data = utils.merge(data, more_data)
+        return data
+
     else:
         utils.log("Instagram session not found in config.json. Not all information will be available.", "warn")
 
-    
+if __name__ == "__main__":
+    rich.print_json(data=utils.clean(main({"name": "scarletpearlcruise"})))

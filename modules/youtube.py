@@ -37,12 +37,7 @@ def main(account):
     username = data.get("aboutChannelViewModel", {}).get("canonicalChannelUrl").split("@")[1]
     description = data.get("aboutChannelViewModel", {}).get("description")
 
-    
-
-    if description:
-        more_data = utils.extract(description)
-    else:
-        more_data = {}
+    more_data = utils.extract(description)
 
     country = data.get("aboutChannelViewModel", {}).get("country")
     links = data.get("aboutChannelViewModel", {}).get("links", [])
@@ -61,7 +56,6 @@ def main(account):
         "links": links
     }
 
-    for key in more_data:
-        data[key] = more_data[key]
+    data = utils.merge(data, more_data)
 
     return data

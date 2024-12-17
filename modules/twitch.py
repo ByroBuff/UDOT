@@ -36,10 +36,15 @@ def main(account):
     
     links.append(f"https://twitch.tv/{login}")
 
-    return {
+    more_data = utils.extract(bio)
+
+    data = {
         "sites_checked": [f"https://twitch.tv/{login}"],
         "usernames": [login, display_name],
         "images": [profile_pic],
         "bios": [bio],
         "links": links
     }
+
+    data = utils.merge(data, more_data)
+    return data
