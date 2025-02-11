@@ -6,8 +6,6 @@ import bs4
 def main(account):
     response = requests.get(f"https://xboxgamertag.com/search/{account['name']}")
 
-    print(response.text)
-
     soup = bs4.BeautifulSoup(response.text, 'html.parser')
 
     if "Gamertag doesn't exist" in response.text:

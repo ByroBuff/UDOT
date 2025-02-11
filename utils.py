@@ -2,6 +2,7 @@ import json
 import rich
 import importlib
 import re
+import traceback
 
 def load_config() -> dict:
     with open('config.json', 'r') as f:
@@ -12,6 +13,23 @@ def save_config(config: dict) -> None:
         json.dump(config, f, indent=4)
 
 config = load_config()
+
+def print_logo():
+    banner = """[bold]
+            [blue]888     888[/][white]      888          888   [/]
+            [blue]888     888[/][white]      888          888   [/]
+            [blue]888     888[/][white]      888          888   [/]
+            [blue]888     888[/][white]  .d88888  .d88b.  888   [/]
+            [blue]888     888[/][white] d88" 888 d88""88b 888888[/]
+            [blue]888     888[/][white] d88  888 888  888 888   [/]
+            [blue]Y88b. .d88P[/][white] Y88b 888 Y88..88P Y88b. [/]
+            [blue] "Y88888P" [/][white]  "Y88888  "888P"   "Y888[/][/bold]
+
+                       [reset]By : [bold][deep_sky_blue1][link=https://x.com/byrobuff1]@ByroBuff[/link][/][/][/]
+               [indian_red1]The best Discord osint tool 💖[/indian_red1]
+    """
+
+    rich.print(banner)
 
 class Glyphs:
     if config["glyphs"] == True:
@@ -75,7 +93,10 @@ def call(module_name: str, account: dict):
         module = importlib.import_module(f"modules.{module_name}")
         func = getattr(module, "main")
 
-        return func(account)
+        try:
+            return func(account)
+        except Exception as e:
+            log(f"Error running {module_name} module:\n=============================================\n\n{traceback.format_exc()}\nPassed Info: {account}\n\n=============================================", "error")
     else:
         log(f"Module for {module_name} not found.", "warn")
 
@@ -111,11 +132,20 @@ def merge(data: dict, more_data: dict) -> dict:
 
 def get_module(link: str):
     modules = {
-        "telegram": r"http?s://t.me/[\w]+",
-        "gunslol": r"http?s://guns.lol/[\w]+",
-        "linktree": r"http?s://linktr.ee/[\w]+",
-        "youtube": [r"http?s://www.youtube.com/channel/[\w]+", r"http?s://www.youtube.com/c/[\w]+", r"http?s://www.youtube.com/@[\w]+"],
+        "telegram": r"https?://(www.)?t.me/[\w]+",
+        "gunslol": r"https?://(www.)?guns.lol/[\w]+",
+        "linktree": r"https?://(www.)?linktr.ee/[\w]+",
+        "youtube": [r"https?://(www.)?youtube.com/channel/[\w]+", r"https?://(www.)?youtube.com/c/[\w]+", r"https?://(www.)?youtube.com/@[\w]+", r'https?://(www.)?youtube.com/[\w]+'],
         "bluesky": r"http://[\w]+.bsky.social",
+        "discord": r"https?://(www.)?discord.com/users/[\w]+",
+        "instagram": r"https?://(www.)?instagram.com/[\w]+",
+        "twitter": [r"https?://(www.)?twitter.com/[\w]+", r"https?://(www.)?x.com/[\w]+"],
+        "steam": [r"https?://(www.)?steamcommunity.com/id/[\w]+", r"https?://(www.)?steamcommunity.com/profiles/[\w]+"],
+        "github": r"https?://(www.)?github.com/[\w]+",
+        "reddit": r"https?://(www.)?reddit.com/u?(ser)/[\w]+",
+        "twitch": r"https?://(www.)?twitch.tv/[\w]+",
+        "spotify": r"https?://open.spotify.com/user/[\w]+",
+        "xbox": r"https?://(www.)?xboxgamertag.com/search/[\w]+",
     }
 
     for module in modules:
@@ -130,7 +160,7 @@ def get_module(link: str):
 
     return None
 
-def process_module_output(module_output, final_output, checked):
+def process_module_output(source, module_output, final_output, modualised_output, checked):
     if module_output is None:
         return
 
@@ -145,3 +175,13 @@ def process_module_output(module_output, final_output, checked):
             final_output[key] = module_output[key]
         else:
             final_output[key] += module_output[key]
+
+    if source not in modualised_output:
+        modualised_output[source] = {}
+
+    for key in keys:
+        # add the key to source
+        if key not in modualised_output[source]:
+            modualised_output[source][key] = module_output[key]
+        else:
+            modualised_output[source][key] += module_output[key]
